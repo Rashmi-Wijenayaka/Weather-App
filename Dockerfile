@@ -1,5 +1,5 @@
 # React App
-FROM node:25-alpine3.22 as build
+FROM node:25-alpine3.22 AS build
 WORKDIR /app
 COPY package.json .
 RUN npm install
@@ -10,6 +10,7 @@ RUN npm run build
 FROM nginx:alpine-slim
 WORKDIR /usr/share/nginx/html
 RUN rm -rf * # Remove default nginx static files
-COPY --from=build /app/dist . # Copy built React app to nginx directory
+# Copy built React app to nginx directory.
+COPY --from=build /app/dist/ /usr/share/nginx/html/
 EXPOSE 80
 ENTRYPOINT [ "nginx", "-g", "daemon off;" ]
