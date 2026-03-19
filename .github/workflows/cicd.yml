@@ -32,19 +32,19 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    env:
+      EC2_HOST: ${{ secrets.EC2_HOST != '' && secrets.EC2_HOST || vars.EC2_HOST }}
+      EC2_USER: ${{ secrets.EC2_USER != '' && secrets.EC2_USER || vars.EC2_USER }}
+      EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+      EC2_PORT: ${{ secrets.EC2_PORT != '' && secrets.EC2_PORT || vars.EC2_PORT || '22' }}
     steps:
       - name: Validate deploy secrets
-        env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USER: ${{ secrets.EC2_USER }}
-          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_PORT: ${{ secrets.EC2_PORT }}
         run: |
           set -e
-          test -n "$EC2_HOST" || (echo "::error::Missing GitHub secret EC2_HOST" && exit 1)
-          test -n "$EC2_USER" || (echo "::error::Missing GitHub secret EC2_USER" && exit 1)
+          test -n "$EC2_HOST" || (echo "::error::Missing EC2 host. Set secret EC2_HOST or variable EC2_HOST" && exit 1)
+          test -n "$EC2_USER" || (echo "::error::Missing EC2 user. Set secret EC2_USER or variable EC2_USER" && exit 1)
           test -n "$EC2_SSH_KEY" || (echo "::error::Missing GitHub secret EC2_SSH_KEY" && exit 1)
-          test -n "$EC2_PORT" || (echo "::error::Missing GitHub secret EC2_PORT" && exit 1)
+          test -n "$EC2_PORT" || (echo "::error::Missing EC2 port. Set secret EC2_PORT or variable EC2_PORT" && exit 1)
 
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
@@ -52,10 +52,10 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ secrets.EC2_PORT }}
+          host: ${{ env.EC2_HOST }}
+          username: ${{ env.EC2_USER }}
+          key: ${{ env.EC2_SSH_KEY }}
+          port: ${{ env.EC2_PORT }}
           envs: DOCKER_USERNAME,DOCKER_PASSWORD
           script: |
             set -e
